@@ -1,5 +1,7 @@
 # tea-insights
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Vulnetix/tea-insights)
+
 The data layer of the Vulnetix [Transparency Exchange API](https://github.com/CycloneDX/transparency-exchange-api) (TEA), shared by two services:
 
 - **vdb-site** serves TEA (`/tea/v1/*`, `/.well-known/tea`) and Insights (`POST /insights/static`).

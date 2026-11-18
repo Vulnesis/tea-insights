@@ -3,6 +3,8 @@ package teainsights
 import (
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestParseTEI(t *testing.T) {
@@ -40,10 +42,42 @@ func TestIsLocalDomain(t *testing.T) {
 			t.Errorf("%s should be local", d)
 		}
 	}
-	for _, d := range []string{"example.com", "evilvulnetix.com", "vulnes.is.evil.io", ""} {
+	for _, d := range []string{"example.com", "evilvulnesis.com", "vulnes.is.evil.io", ""} {
 		if IsLocalDomain(d) {
 			t.Errorf("%s should not be local", d)
 		}
+	}
+}
+
+// Vulnesis runs in parity with Vulnetix: TEIs minted under the Vulnetix name
+// still resolve here, and lookalike domains of either brand do not.
+func TestIsLocalDomainLegacy(t *testing.T) {
+	for _, d := range []string{LegacyDomain, "www." + LegacyDomain, "api." + LegacyDomain, "tea." + LegacyDomain} {
+		if !IsLocalDomain(d) {
+			t.Errorf("%s should be local", d)
+		}
+	}
+	for _, d := range []string{"evil" + LegacyDomain, LegacyDomain + ".evil.io", "x.tea." + LegacyDomain} {
+		if IsLocalDomain(d) {
+			t.Errorf("%s should not be local", d)
+		}
+	}
+}
+
+// Deterministic identifiers must not depend on the brand: the UUIDv5
+// namespaces are seeded from the domain the first identifiers were minted
+// under, so a product has the same UUID under the Vulnetix name and Vulnesis.
+func TestUUIDNamespacesStableAcrossBrands(t *testing.T) {
+	for _, typ := range []string{"product", "component", "productRelease", "componentRelease", "insights", "distribution"} {
+		want := uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+LegacyDomain+"/tea/v1#"+typ))
+		if got := Namespace(typ); got != want {
+			t.Errorf("Namespace(%q) = %s, want %s (seeded from %s)", typ, got, want, LegacyDomain)
+		}
+	}
+	// A product UUID minted before the rebrand is unchanged.
+	want := uuid.NewSHA1(uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+LegacyDomain+"/tea/v1#product")), []byte("org|repo")).String()
+	if got := ProductUUID("org", "repo"); got != want {
+		t.Errorf("ProductUUID changed across brands: %s != %s", got, want)
 	}
 }
 

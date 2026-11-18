@@ -1,4 +1,4 @@
-module github.com/Vulnetix/tea-insights
+module github.com/Vulnesis/tea-insights
 
 go 1.25.0
 

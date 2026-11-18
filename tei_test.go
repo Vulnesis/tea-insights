@@ -16,11 +16,11 @@ func TestParseTEIBothForms(t *testing.T) {
 		{"urn purl", PURLTEI(purl), TEI{Type: "purl", Domain: Domain, ID: purl}, true},
 		{"uri purl", PURLTEIURI(purl), TEI{Type: "purl", Domain: Domain, ID: purl}, true},
 		{"uri purl padded", PURLTEIURI(purl) + "==", TEI{Type: "purl", Domain: Domain, ID: purl}, true},
-		{"uri upper scheme and domain", "TEI://Vulnetix.COM/uuid/" + id, TEI{Type: "uuid", Domain: Domain, ID: id}, true},
-		{"uri missing id", "tei://vulnetix.com/uuid/", TEI{}, false},
-		{"uri extra segment", "tei://vulnetix.com/uuid/a/b", TEI{}, false},
-		{"uri encoded slash", "tei://vulnetix.com/uuid/a%2Fb", TEI{Type: "uuid", Domain: Domain, ID: "a/b"}, true},
-		{"uri bad base64", "tei://vulnetix.com/purl/!!!", TEI{}, false},
+		{"uri upper scheme and domain", "TEI://vulnes.is/uuid/" + id, TEI{Type: "uuid", Domain: Domain, ID: id}, true},
+		{"uri missing id", "tei://vulnes.is/uuid/", TEI{}, false},
+		{"uri extra segment", "tei://vulnes.is/uuid/a/b", TEI{}, false},
+		{"uri encoded slash", "tei://vulnes.is/uuid/a%2Fb", TEI{Type: "uuid", Domain: Domain, ID: "a/b"}, true},
+		{"uri bad base64", "tei://vulnes.is/purl/!!!", TEI{}, false},
 		{"garbage", "nope", TEI{}, false},
 	}
 	for _, c := range cases {

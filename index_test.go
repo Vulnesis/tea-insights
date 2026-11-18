@@ -3,6 +3,8 @@ package teainsights
 import (
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestParseTEI(t *testing.T) {
@@ -11,15 +13,15 @@ func TestParseTEI(t *testing.T) {
 		ok              bool
 		typ, domain, id string
 	}{
-		{"urn:tei:uuid:vulnetix.com:54e8820d-0803-5a4f-858d-88a279486564", true, "uuid", "vulnetix.com", "54e8820d-0803-5a4f-858d-88a279486564"},
-		{"URN:TEI:UUID:Vulnetix.com:ABC", true, "uuid", "vulnetix.com", "ABC"},
-		{"  urn:tei:purl:vulnetix.com:pkg:github/acme/store@abc123  ", true, "purl", "vulnetix.com", "pkg:github/acme/store@abc123"},
-		{"urn%3Atei%3Apurl%3Avulnetix.com%3Apkg%3Anpm%2Flodash%404.17.20", true, "purl", "vulnetix.com", "pkg:npm/lodash@4.17.20"},
+		{"urn:tei:uuid:vulnes.is:54e8820d-0803-5a4f-858d-88a279486564", true, "uuid", "vulnes.is", "54e8820d-0803-5a4f-858d-88a279486564"},
+		{"URN:TEI:UUID:vulnes.is:ABC", true, "uuid", "vulnes.is", "ABC"},
+		{"  urn:tei:purl:vulnes.is:pkg:github/acme/store@abc123  ", true, "purl", "vulnes.is", "pkg:github/acme/store@abc123"},
+		{"urn%3Atei%3Apurl%3Avulnes.is%3Apkg%3Anpm%2Flodash%404.17.20", true, "purl", "vulnes.is", "pkg:npm/lodash@4.17.20"},
 		{"urn:tei:swid:example.com:acme-widget-1.0", true, "swid", "example.com", "acme-widget-1.0"},
 		{"urn:tei:hash:example.com:sha256:abcd", true, "hash", "example.com", "sha256:abcd"},
-		{"urn:tei:uuid:vulnetix.com:", false, "", "", ""},
+		{"urn:tei:uuid:vulnes.is:", false, "", "", ""},
 		{"urn:tei:uuid", false, "", "", ""},
-		{"urn:isbn:uuid:vulnetix.com:x", false, "", "", ""},
+		{"urn:isbn:uuid:vulnes.is:x", false, "", "", ""},
 		{"", false, "", "", ""},
 	}
 	for _, c := range cases {
@@ -35,15 +37,47 @@ func TestParseTEI(t *testing.T) {
 }
 
 func TestIsLocalDomain(t *testing.T) {
-	for _, d := range []string{"vulnetix.com", "www.vulnetix.com", "api.vulnetix.com", "tea.vulnetix.com"} {
+	for _, d := range []string{"vulnes.is", "www.vulnes.is", "api.vulnes.is", "tea.vulnes.is"} {
 		if !IsLocalDomain(d) {
 			t.Errorf("%s should be local", d)
 		}
 	}
-	for _, d := range []string{"example.com", "evilvulnetix.com", "vulnetix.com.evil.io", ""} {
+	for _, d := range []string{"example.com", "evilvulnesis.com", "vulnes.is.evil.io", ""} {
 		if IsLocalDomain(d) {
 			t.Errorf("%s should not be local", d)
 		}
+	}
+}
+
+// Vulnesis runs in parity with Vulnetix: TEIs minted under the Vulnetix name
+// still resolve here, and lookalike domains of either brand do not.
+func TestIsLocalDomainLegacy(t *testing.T) {
+	for _, d := range []string{LegacyDomain, "www." + LegacyDomain, "api." + LegacyDomain, "tea." + LegacyDomain} {
+		if !IsLocalDomain(d) {
+			t.Errorf("%s should be local", d)
+		}
+	}
+	for _, d := range []string{"evil" + LegacyDomain, LegacyDomain + ".evil.io", "x.tea." + LegacyDomain} {
+		if IsLocalDomain(d) {
+			t.Errorf("%s should not be local", d)
+		}
+	}
+}
+
+// Deterministic identifiers must not depend on the brand: the UUIDv5
+// namespaces are seeded from the domain the first identifiers were minted
+// under, so a product has the same UUID under the Vulnetix name and Vulnesis.
+func TestUUIDNamespacesStableAcrossBrands(t *testing.T) {
+	for _, typ := range []string{"product", "component", "productRelease", "componentRelease", "insights", "distribution"} {
+		want := uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+LegacyDomain+"/tea/v1#"+typ))
+		if got := Namespace(typ); got != want {
+			t.Errorf("Namespace(%q) = %s, want %s (seeded from %s)", typ, got, want, LegacyDomain)
+		}
+	}
+	// A product UUID minted before the rebrand is unchanged.
+	want := uuid.NewSHA1(uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+LegacyDomain+"/tea/v1#product")), []byte("org|repo")).String()
+	if got := ProductUUID("org", "repo"); got != want {
+		t.Errorf("ProductUUID changed across brands: %s != %s", got, want)
 	}
 }
 

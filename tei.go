@@ -46,17 +46,6 @@ import (
 // the DNS name a consumer resolves to find /.well-known/tea.
 const Domain = "vulnes.is"
 
-// LegacyDomain is the same authority under the Vulnetix name. Vulnesis runs in
-// parity with Vulnetix and serves data minted under the Vulnetix name, so TEIs in either
-// domain resolve here.
-const LegacyDomain = "vulnetix.com"
-
-// uuidNamespaceDomain seeds the UUIDv5 namespaces below. It is fixed to the
-// domain the first identifiers were minted under, so every product, component,
-// release and distribution UUID is the same under the Vulnetix name and the
-// Vulnesis one: changing it would change every deterministic identifier.
-const uuidNamespaceDomain = "vulnetix.com"
-
 // Per-object-type namespaces. Each is a UUIDv5 of a type-scoped URL under the
 // URL namespace, which is what keeps a product UUID and a component UUID
 // distinct even though they share a natural key.
@@ -81,7 +70,7 @@ func DistributionUUID(repo, version, assetName string) string {
 }
 
 func Namespace(objectType string) uuid.UUID {
-	return uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+uuidNamespaceDomain+"/tea/v1#"+objectType))
+	return uuid.NewSHA1(uuid.NameSpaceURL, []byte("https://"+Domain+"/tea/v1#"+objectType))
 }
 
 func ProductUUID(orgID, repo string) string {
@@ -249,11 +238,9 @@ func parseTEIURI(rest string) (TEI, bool) {
 // authority. Only TEIs in our own namespace can be resolved here; anything else
 // is another publisher's identifier and is reported as unknown.
 func IsLocalDomain(domain string) bool {
-	for _, d := range []string{Domain, LegacyDomain} {
-		switch domain {
-		case d, "www." + d, "api." + d, "tea." + d:
-			return true
-		}
+	switch domain {
+	case Domain, "www." + Domain, "api." + Domain, "tea." + Domain:
+		return true
 	}
 	return false
 }

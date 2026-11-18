@@ -1,6 +1,6 @@
 # tea-insights
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Vulnesis/tea-insights)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Vulnetix/tea-insights)
 
 The data layer of the Vulnesis [Transparency Exchange API](https://github.com/CycloneDX/transparency-exchange-api) (TEA), shared by two services:
 
